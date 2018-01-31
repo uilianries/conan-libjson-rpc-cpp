@@ -1,0 +1,67 @@
+--- SConstruct.dist	2014-03-20 12:11:11.743779832 -0300
++++ SConstruct	2014-03-20 12:12:16.627779238 -0300
+@@ -7,7 +7,8 @@
+ import platform as pltfrm;
+ 
+ # Configure compiler arguments
+-cflags = ['-std=c++98', '-Wall', '-Wextra', '-pedantic', '-Wredundant-decls', '-Wshadow', '-Werror', '-O2'];
++# '-Werror',
++cflags = ['-std=c++98', '-Wall', '-Wextra', '-pedantic', '-Wredundant-decls', '-Wshadow', '-O2'];
+ 
+ cpppath = [];
+ libpath = [];
+@@ -27,11 +28,12 @@
+   else:
+     install_dir = '/usr/local';
+ 
+-cpppath = [];
+-libpath = [];
+-linkflags = [];
++cpppath = [ ];
++libpath = [ ];
++linkflags = [ ];
+ 
+-platform = "default";
++platform = ARGUMENTS.get( "platform", "default" );
++_tools = [ "doxygen" ]
+ 
+ if sys.platform == 'win32':
+   platform = "mingw";
+@@ -40,8 +42,27 @@
+   linkflags.append('-enable-auto-import');
+   cpppath.append('-Ic:\\MinGW\\include');
+ 
++if platform in ( "linux-arm", "linux-mindspeed", "linux-openwrt" ):
++  if not os.environ.get( "CROSS_COMPILE", "" ):
++    print "You must to setup the CROSS COMPILE environment first"
++    sys.exit( 2 )
++
++  CXX = os.environ.get( "CXX" )
++  platform = "linux-arm"
++  cpppath.append( "../jsoncpp-src-0.5.0/include" )
++  libpath.append( "../jsoncpp-src-0.5.0/libs" )
++  _tools.append( "default" )
++else:
++  if platform == "linux-gcc": # jsoncpp compatibility
++    _tools.append( "default" )
++  else:
++    _tools.append( platform )
++  CXX = "g++"
++  cpppath.append( "../jsoncpp-src-0.5.0/include" )
++  libpath.append( "../jsoncpp-src-0.5.0/libs" )
++
+ # Create an environment
+-env = Environment(ENV= os.environ.copy(), tools = [platform, "doxygen"], toolpath = ['.', './doc'], CXXFLAGS = cflags, CPPPATH = cpppath, LIBPATH = libpath, LINKFLAGS = linkflags);
++env = Environment( CXX = CXX, ENV = os.environ.copy(), tools = _tools, toolpath = ['.', './doc'], CXXFLAGS = cflags, CPPPATH = cpppath, LIBPATH = libpath, LINKFLAGS = linkflags);
+ 
+ # Sources and name of the JsonRpc-Cpp library
+ lib_target  = 'jsonrpc';
+@@ -73,7 +94,7 @@
+ # Build libjsonrpc
+ libs = ['json'];
+ 
+-if env.WhereIs('curl') is not None:
++if platform != "linux-arm" and env.WhereIs('curl') is not None:
+   libs.append('curl');
+   lib_includes.append('src/jsonrpc_httpclient.h');
+   lib_sources.append('src/jsonrpc_httpclient.cpp');

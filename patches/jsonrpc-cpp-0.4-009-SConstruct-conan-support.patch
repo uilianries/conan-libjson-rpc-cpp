@@ -1,0 +1,41 @@
+--- SConstruct.004	2018-01-31 11:21:52.459076165 -0200
++++ SConstruct	2018-01-31 11:24:21.005069543 -0200
+@@ -10,9 +10,6 @@
+ # '-Werror',
+ cflags = ['-std=c++98', '-Wall', '-Wextra', '-pedantic', '-Wredundant-decls', '-Wshadow', '-O2'];
+ 
+-cpppath = [];
+-libpath = [];
+-
+ # Command line parsing
+ 
+ # Build with debug symbols or not
+@@ -28,8 +25,8 @@
+   else:
+     install_dir = '/usr/local';
+ 
+-cpppath = [ ];
+-libpath = [ ];
++cpppath = ARGUMENTS.get("cpppath", "").split(":");
++libpath = ARGUMENTS.get("libpath", "").split(":");
+ linkflags = [ ];
+ 
+ platform = ARGUMENTS.get( "platform", "default" );
+@@ -49,8 +46,6 @@
+ 
+   CXX = os.environ.get( "CXX" )
+   platform = "linux-arm"
+-  cpppath.append( "../jsoncpp-src-0.5.0/include" )
+-  libpath.append( "../jsoncpp-src-0.5.0/libs" )
+   _tools.append( "default" )
+ else:
+   if platform == "linux-gcc": # jsoncpp compatibility
+@@ -58,8 +53,6 @@
+   else:
+     _tools.append( platform )
+   CXX = "g++"
+-  cpppath.append( "../jsoncpp-src-0.5.0/include" )
+-  libpath.append( "../jsoncpp-src-0.5.0/libs" )
+ 
+ # Create an environment
+ env = Environment( CXX = CXX, ENV = os.environ.copy(), tools = _tools, toolpath = ['.', './doc'], CXXFLAGS = cflags, CPPPATH = cpppath, LIBPATH = libpath, LINKFLAGS = linkflags);

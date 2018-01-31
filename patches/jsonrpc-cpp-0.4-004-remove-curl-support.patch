@@ -1,0 +1,29 @@
+--- SConstruct.dist	2014-07-07 19:03:59.664868813 -0300
++++ SConstruct	2014-07-07 19:04:35.908868480 -0300
+@@ -94,10 +94,10 @@
+ # Build libjsonrpc
+ libs = ['json'];
+ 
+-if platform != "linux-arm" and env.WhereIs('curl') is not None:
+-  libs.append('curl');
+-  lib_includes.append('src/jsonrpc_httpclient.h');
+-  lib_sources.append('src/jsonrpc_httpclient.cpp');
++#if platform != "linux-arm" and env.WhereIs('curl') is not None:
++#  libs.append('curl');
++#  lib_includes.append('src/jsonrpc_httpclient.h');
++#  lib_sources.append('src/jsonrpc_httpclient.cpp');
+ 
+ # Add winsock library for MS Windows
+ if sys.platform == 'win32':
+
+--- src/jsonrpc.h.dist	2014-07-07 19:05:05.232868212 -0300
++++ src/jsonrpc.h	2014-07-07 19:05:15.768868115 -0300
+@@ -53,7 +53,7 @@
+ #include "jsonrpc_client.h"
+ #include "jsonrpc_udpclient.h"
+ #include "jsonrpc_tcpclient.h"
+-#include "jsonrpc_httpclient.h"
++//#include "jsonrpc_httpclient.h"
+ 
+ #include "netstring.h"
+ #include "networking.h"

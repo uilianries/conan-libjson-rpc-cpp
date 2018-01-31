@@ -1,0 +1,132 @@
+--- src/jsonrpc_tcpserver.cpp.dist	2014-07-21 09:16:04.145840967 -0300
++++ src/jsonrpc_tcpserver.cpp	2014-07-21 09:58:19.761481752 -0300
+@@ -31,7 +31,12 @@
+ #include <cstring>
+ #include <cerrno>
+ 
+-namespace Json 
++//KHOMP: needed for non-blocking delay
++#ifdef __GNUC__
++#include <unistd.h>
++#endif /* __GNUC__ */
++
++namespace Json
+ {
+ 
+   namespace Rpc
+@@ -49,7 +54,7 @@
+         Close();
+       }
+     }
+-    
++
+     ssize_t TcpServer::Send(int fd, const std::string& data)
+     {
+       std::string rep = data;
+@@ -63,19 +68,83 @@
+       return ::send(fd, rep.c_str(), rep.length(), 0);
+     }
+ 
++    //KHOMP: This method was modified because the original truncates the receive
++    //       buffer, if the size is more than 1500 bytes
++    //       Added non-blocking read to avoid deadlock on recv if the content
++    //       size is multiple of buf_sz
+     bool TcpServer::Recv(int fd)
+     {
+       Json::Value response;
++      static const int buf_sz = 512;
++      static const int max_retry = 5, retry_delay[max_retry] = { 1, 5, 5, 14, 20 } /* milliseconds */;
++      char buf[buf_sz];
++      int retry = 0;
++      // block fist read to wait the server process the request...
++      // last is flagged every time recv returns less than buffer size. WARNING
++      // receiving less than supplied buffer is a valid condition and may not
++      // be the last bytes from the stream, so we try to read again and if it
++      // timeouts, than we continue processing, this is ugly, but works...
++      bool first = true, last = false;
+       ssize_t nb = -1;
+-      char buf[1500];
++      std::string msg;
+ 
+-      nb = recv(fd, buf, sizeof(buf), 0);
++      for( ;; )
++      {
++        if( ( nb = ::recv( fd, buf, sizeof( buf ), first ? 0 : MSG_DONTWAIT ) ) == -1 )
++        {
++          if( retry < max_retry && ( errno == EAGAIN || errno == EWOULDBLOCK ) )
++          {
++            if( last && retry == 1 )
++            {
++              // end of data
++              break;
++            }
++#if _MSC_VER
++            Sleep( retry_delay[retry] );
++#else /* _MSC_VER */
++            usleep( retry_delay[retry] * 1000 );
++#endif /* _MSC_VER */
++            ++retry;
++            continue;
++          }
++          else if( retry == max_retry )
++          {
++            // will try to parse anything inside data buffer and hope for the
++            // best...
++            break;
++          }
++          else
++          {
++            std::cerr << "Error while receiving: (" << errno << ") " << strerror( errno ) << std::endl;
++          }
++          msg.clear();
++          break;;
++        }
++
++        if( nb )
++        {
++          msg.append(buf, nb);
++          retry = 0;
++          first = false;
++          if( nb < buf_sz )
++          {
++            last = true;
++          }
++          else if( last )
++          {
++            last = false;
++          }
++        }
++        else
++        {
++          // socket closed
++          break;
++        }
++      }
+ 
+       /* give the message to JsonHandler */
+-      if(nb > 0)
++      if(msg.size() > 0)
+       {
+-        std::string msg = std::string(buf, nb);
+-
+         if(GetEncapsulatedFormat() == Json::Rpc::NETSTRING)
+         {
+           try
+@@ -111,7 +180,7 @@
+             if(retVal == -1)
+             {
+               /* error */
+-              std::cerr << "Error while sending data: " 
++              std::cerr << "Error while sending data: "
+                         << strerror(errno) << std::endl;
+               return false;
+             }
+@@ -237,7 +306,7 @@
+         ::close((*it));
+       }
+       m_clients.erase(m_clients.begin(), m_clients.end());
+-      
++
+       /* listen socket should be closed in Server destructor */
+     }
+ 

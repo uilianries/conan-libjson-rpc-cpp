@@ -1,0 +1,10 @@
+--- src/jsonrpc_tcpserver.cpp.prev	2016-06-09 13:13:19.684158214 -0300
++++ src/jsonrpc_tcpserver.cpp	2016-06-09 13:10:08.152150756 -0300
+@@ -193,6 +193,7 @@
+       }
+       else
+       {
++        ::close(fd);
+         m_purge.push_back(fd);
+         return false;
+       }

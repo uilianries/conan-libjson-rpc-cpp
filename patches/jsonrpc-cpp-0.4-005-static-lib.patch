@@ -1,0 +1,20 @@
+--- SConstruct_bkp	2014-12-04 13:37:44.733497805 -0200
++++ SConstruct	2014-12-04 13:45:02.877485165 -0200
+@@ -105,6 +105,8 @@
+ else:
+   libs.append('pthread');
+ 
++
++libjsonrpc_static = env.StaticLibrary(target = lib_target, source = lib_sources, LIBS = libs);
+ libjsonrpc = env.SharedLibrary(target = lib_target, source = lib_sources, LIBS = libs);
+ 
+ # Build examples
+@@ -145,7 +147,7 @@
+ env.Alias('doxygen', doxygen);
+ 
+ # Alias for targets
+-env.Alias('build', [libjsonrpc]);
++env.Alias('build', [libjsonrpc,libjsonrpc_static]);
+ env.Alias('examples', ['build', tcpserver, udpserver, tcpclient, udpclient, system_bin]);
+ env.Alias('install', [install_dir]);
+ env.Alias('build-test', ['build', unittest]);

@@ -1,0 +1,14 @@
+--- src/jsonrpc_tcpclient.cpp.prev	2016-09-27 14:06:54.125466365 -0300
++++ src/jsonrpc_tcpclient.cpp	2016-09-27 14:07:09.241466953 -0300
+@@ -59,7 +59,11 @@
+         rep = netstring::encode(rep);
+       }
+ 
++#if _MSC_VER
+       return ::send(m_sock, rep.c_str(), rep.length(), 0);
++#else /* _MSC_VER */
++      return ::send(m_sock, rep.c_str(), rep.length(), MSG_NOSIGNAL);
++#endif /* _MSC_VER */
+     }
+ 
+     //KHOMP: This method was modified because the original truncates the receive

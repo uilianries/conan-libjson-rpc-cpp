@@ -1,0 +1,57 @@
+--- src/networking.cpp  2011-05-06 13:36:10.000000000 -0300
++++ src/networking.cpp  2017-02-21 18:12:56.835137534 -0300
+@@ -24,6 +24,8 @@
+ 
+ #include <cstdio>
+ #include <cstring>
++#include <unistd.h>
++#include <fcntl.h>
+ 
+ #include "networking.h"
+ 
+@@ -66,6 +68,8 @@
+     struct addrinfo* p = NULL;
+     char service[8];
+     int sock = -1;
++    fd_set fdset;
++    struct timeval tv;
+ 
+     if(!port || address == "")
+     {
+@@ -95,9 +99,34 @@
+         continue;
+       }
+ 
+-      if(protocol == TCP && ::connect(sock, (struct sockaddr*)p->ai_addr, p->ai_addrlen) == -1)
++      int flags = fcntl( sock, F_GETFL );
++      if( -1 == fcntl( sock, F_SETFL, flags | O_NONBLOCK ) )
+       {
+-        ::close(sock);
++        ::close( sock );
++        sock = -1;
++        continue;
++      }
++
++      if(protocol == TCP)
++      {
++        ::connect(sock, (struct sockaddr*)p->ai_addr, p->ai_addrlen);
++
++        FD_ZERO(&fdset);
++        FD_SET(sock, &fdset);
++        tv.tv_sec = 3;
++        tv.tv_usec = 0;
++
++        if (select(sock + 1, NULL, &fdset, NULL, &tv) < 1)
++        {
++          ::close( sock );
++          sock = -1;
++          continue;
++        }
++      }
++
++      if( -1 == fcntl( sock, F_SETFL, flags ) )
++      {
++        ::close( sock );
+         sock = -1;
+         continue;
+       }
