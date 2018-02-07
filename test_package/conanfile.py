@@ -2,7 +2,7 @@ from conans import ConanFile, CMake
 import os
 
 class JsonCPPTestConan(ConanFile):
-    settings = "os", "compiler", "arch"
+    settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
 
     def build(self):

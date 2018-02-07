@@ -18,7 +18,7 @@ class JsonRPCCPPConan(ConanFile):
     homepage = "https://sourceforge.net/projects/jsonrpc-cpp/"
     url = "https://downloads.sourceforge.net/project/jsonrpc-cpp/jsonrpc-cpp/{}?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fjsonrpc-cpp%2Ffiles%2Fjsonrpc-cpp%2F{}%2Fdownload&ts=1517403885".format(khomp_src, khomp_src)
     license = "MIT"
-    settings = "os", "compiler", "arch"
+    settings = "os", "compiler", "build_type", "arch"
     generators = "cmake", "txt"
     options = {
         "shared": [True, False, "Both"]
@@ -44,16 +44,15 @@ class JsonRPCCPPConan(ConanFile):
             open(khomp_patches_file, "w").write("done")
 
     def source(self):
-        if not os.path.exists(self.khomp_src):
-            download(self.url, self.khomp_src)
-            self.checksum()
-
         if os.path.exists(self.khomp_src):
             try:
                 self.checksum()
             except:
                 os.unlink(self.khomp_src)
                 self.source()
+        else:
+            download(self.url, self.khomp_src)
+            self.checksum()
 
         if not os.path.exists(self.khomp_src_folder):
             # NOTE: conan unzip does not support xz
