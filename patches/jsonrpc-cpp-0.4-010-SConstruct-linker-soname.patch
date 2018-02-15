@@ -1,0 +1,17 @@
+--- SConstruct.009	2018-02-15 19:02:23.841329870 -0200
++++ SConstruct	2018-02-15 19:04:29.086324286 -0200
+@@ -47,12 +47,14 @@
+   CXX = os.environ.get( "CXX" )
+   platform = "linux-arm"
+   _tools.append( "default" )
++  linkflags.append( "-Wl,-soname=libjsonrpc.so" )
+ else:
+   if platform == "linux-gcc": # jsoncpp compatibility
+     _tools.append( "default" )
+   else:
+     _tools.append( platform )
+   CXX = "g++"
++  linkflags.append( "-Wl,-soname=libjsonrpc.so" )
+ 
+ # Create an environment
+ env = Environment( CXX = CXX, ENV = os.environ.copy(), tools = _tools, toolpath = ['.', './doc'], CXXFLAGS = cflags, CPPPATH = cpppath, LIBPATH = libpath, LINKFLAGS = linkflags);
