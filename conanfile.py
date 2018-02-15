@@ -5,14 +5,16 @@ import glob
 
 class JsonRPCCPPConan(ConanFile):
     name = "jsonrpc-cpp"
-    version = "0.4"
+    khomp_upstream_version = "0.4"
+    khomp_package_version = "10"
+    version = "{}-{}".format(khomp_upstream_version, khomp_package_version)
     checksums = {
         "md5": "b01e0a9c54d5e511e33d4d5ba28bf958",
         "sha1": "2c83097708614f08dbb13be7c0a968e5d4d6e579",
         "sha256": "b6fd22acff6f4bcac70e2801b0f997d8a5dfcf39bb11901274e19fb8c9b1b39c"
     }
-    khomp_src = "{}-{}.tar.bz2".format(name, version)
-    khomp_src_folder = "{}-{}".format(name, version)
+    khomp_src = "{}-{}.tar.bz2".format(name, khomp_upstream_version)
+    khomp_src_folder = "{}-{}".format(name, khomp_upstream_version)
     khomp_conanfile_folder = os.path.dirname(__file__)
     description = "JsonRpc-Cpp is an OpenSource implementation of JSON-RPC protocol in C++. JSON-RPC is a lightweight remote procedure call protocol similar to XML-RPC."
     homepage = "https://sourceforge.net/projects/jsonrpc-cpp/"
@@ -25,7 +27,7 @@ class JsonRPCCPPConan(ConanFile):
     }
     default_options = "shared=True"
     exports = "patches/*"
-    requires = "jsoncpp/0.5.0@khomp/stable"
+    requires = "jsoncpp/[>=0.5.0-4]@khomp/stable"
 
     def checksum(self):
         for (algorithm, result) in self.checksums.items():
