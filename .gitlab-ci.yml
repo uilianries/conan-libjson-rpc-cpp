@@ -1,0 +1,46 @@
+variables:
+  CONAN_USERNAME: "khomp"
+  CONAN_UPLOAD: "http://gitlab.khomp.corp:9300"
+  CONAN_CHANNEL: "ci"
+  CONAN_UPLOAD_ONLY_WHEN_STABLE: 1
+  CONAN_STABLE_BRANCH_PATTERN: "stable/*"
+
+cache:
+  paths:
+    - "$CI_PROJECT_DIR/pip-cache"
+  key: "$CI_PROJECT_ID"
+
+stages:
+  - build
+
+.conan-upgrade: &conan-upgrade
+  before_script:
+    - sudo apt-get update
+    - sudo pip install --upgrade conan conan_package_tools bincrafters_package_tools --cache-dir $CI_PROJECT_DIR/pip-cache
+    - conan user
+
+.gcc-template: &gcc-definition
+  stage: build
+  <<: *conan-upgrade
+  script:
+    - python build.py
+  tags:
+    - docker
+
+gcc-47:
+  image: khomp/conangcc47
+  variables:
+      CONAN_GCC_VERSIONS: "4.7"
+  <<: *gcc-definition
+
+gcc-5:
+  image: khomp/conangcc5
+  variables:
+      CONAN_GCC_VERSIONS: "5"
+  <<: *gcc-definition
+
+gcc-6:
+  image: khomp/conangcc6
+  variables:
+      CONAN_GCC_VERSIONS: "6"
+  <<: *gcc-definition
